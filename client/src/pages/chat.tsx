@@ -42,16 +42,16 @@ export default function Chat() {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  // Redirect to home if not authenticated
+  // Redirect to auth if not authenticated
   useEffect(() => {
     if (!isLoading && !user) {
       toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
+        title: "Please sign in",
+        description: "You need to be signed in to access the chat.",
         variant: "destructive",
       });
       setTimeout(() => {
-        window.location.href = "/api/login";
+        window.location.href = "/auth";
       }, 500);
       return;
     }
@@ -76,12 +76,12 @@ export default function Chat() {
       setIsTyping(false);
       if (isUnauthorizedError(error as Error)) {
         toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          title: "Session expired",
+          description: "Please sign in again.",
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/auth";
         }, 500);
         return;
       }
@@ -132,8 +132,10 @@ export default function Chat() {
     setIsTyping(false);
   };
 
+  const { logoutMutation } = useAuth();
+  
   const handleLogout = () => {
-    window.location.href = '/api/logout';
+    logoutMutation.mutate();
   };
 
   const formatTime = (timestamp: string) => {
@@ -194,7 +196,7 @@ export default function Chat() {
                 <p className="text-sm font-medium text-foreground">
                   {user?.firstName && user?.lastName 
                     ? `${user.firstName} ${user.lastName}` 
-                    : user?.email || 'User'}
+                    : user?.username || 'User'}
                 </p>
                 {user?.email && (
                   <p className="text-xs text-muted-foreground">{user.email}</p>

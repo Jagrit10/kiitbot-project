@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, requireAuth } from "./auth";
 
 // Mock askBot function - replace with actual implementation
 async function askBot(message: string, authStatus: boolean): Promise<string> {
@@ -55,24 +55,12 @@ Based on the information provided, I'd suggest starting with a simple approach a
   return responses[Math.floor(Math.random() * responses.length)];
 }
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export function registerRoutes(app: Express): Server {
   // Auth middleware
-  await setupAuth(app);
-
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
+  setupAuth(app);
 
   // Chat routes
-  app.post('/api/chat/message', isAuthenticated, async (req: any, res) => {
+  app.post('/api/chat/message', requireAuth, async (req: any, res) => {
     try {
       const { message } = req.body;
       
@@ -80,7 +68,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Message is required" });
       }
 
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const isAuthenticated = !!userId;
       
       // Call the askBot function
