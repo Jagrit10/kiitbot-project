@@ -61,16 +61,16 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex flex-col lg:flex-row">
       {/* Left side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
         <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Bot className="w-8 h-8 text-primary-foreground" />
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+              <Bot className="w-6 h-6 sm:w-8 sm:h-8 text-primary-foreground" />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">Welcome to AI Assistant</h1>
-            <p className="text-muted-foreground">Sign in to start chatting</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Welcome to AI Assistant</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Sign in to start chatting</p>
           </div>
 
           <Tabs defaultValue="login" className="w-full">
@@ -88,7 +88,7 @@ export default function Auth() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleLogin} className="space-y-4">
+                  <form onSubmit={handleLogin} className="space-y-3 sm:space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="login-username">Username</Label>
                       <Input
@@ -135,7 +135,7 @@ export default function Auth() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleRegister} className="space-y-4">
+                  <form onSubmit={handleRegister} className="space-y-3 sm:space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="register-username">Username *</Label>
                       <Input
@@ -212,17 +212,17 @@ export default function Auth() {
       </div>
 
       {/* Right side - Hero */}
-      <div className="flex-1 bg-muted/30 p-8 flex items-center justify-center">
+      <div className="hidden lg:flex flex-1 bg-muted/30 p-8 items-center justify-center">
         <div className="max-w-lg text-center">
-          <div className="w-20 h-20 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <Bot className="w-10 h-10 text-primary-foreground" />
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+            <Bot className="w-8 h-8 sm:w-10 sm:h-10 text-primary-foreground" />
           </div>
           
-          <h2 className="text-3xl font-bold text-foreground mb-4">
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
             Intelligent Conversations
           </h2>
           
-          <p className="text-lg text-muted-foreground mb-8">
+          <p className="text-base sm:text-lg text-muted-foreground mb-6 sm:mb-8">
             Experience the power of AI-driven conversations. Get instant responses, 
             detailed explanations, and creative solutions to your questions.
           </p>

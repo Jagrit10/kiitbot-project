@@ -159,25 +159,26 @@ export default function Chat() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="bg-card border-b border-border px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-            <Bot className="w-6 h-6 text-primary-foreground" />
+      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur border-b border-border px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary rounded-lg flex items-center justify-center">
+            <Bot className="w-4 h-4 sm:w-6 sm:h-6 text-primary-foreground" />
           </div>
-          <div>
-            <h1 className="text-xl font-semibold text-foreground">AI Assistant</h1>
-            <p className="text-sm text-muted-foreground">Always here to help</p>
+          <div className="hidden sm:block">
+            <h1 className="text-lg sm:text-xl font-semibold text-foreground">AI Assistant</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">Always here to help</p>
           </div>
         </div>
         
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-4">
           <Button 
             onClick={handleNewChat}
-            className="flex items-center space-x-2"
+            size="sm"
+            className="flex items-center space-x-1 sm:space-x-2"
             data-testid="button-new-chat"
           >
             <Plus className="w-4 h-4" />
-            <span>New Chat</span>
+            <span className="hidden sm:inline">New Chat</span>
           </Button>
           
           <DropdownMenu>
@@ -213,17 +214,17 @@ export default function Chat() {
       </header>
 
       {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 chat-scroll">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6 chat-scroll">
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex items-start space-x-3 message-animation ${
+            className={`flex items-start space-x-2 sm:space-x-3 message-animation ${
               message.sender === 'user' ? 'justify-end' : ''
             }`}
           >
             {message.sender === 'bot' && (
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
-                <Bot className="w-4 h-4 text-primary-foreground" />
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                <Bot className="w-3 h-3 sm:w-4 sm:h-4 text-primary-foreground" />
               </div>
             )}
             
@@ -237,7 +238,7 @@ export default function Chat() {
                 </span>
               </div>
               
-              <div className={`max-w-3xl rounded-lg p-4 ${
+              <div className={`max-w-[280px] sm:max-w-md lg:max-w-3xl rounded-lg p-3 sm:p-4 ${
                 message.sender === 'user' 
                   ? 'bg-primary text-primary-foreground' 
                   : 'bg-card border border-border'
@@ -251,10 +252,10 @@ export default function Chat() {
             </div>
             
             {message.sender === 'user' && (
-              <Avatar className="w-8 h-8 flex-shrink-0">
+              <Avatar className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0">
                 <AvatarImage src={user?.profileImageUrl || undefined} />
                 <AvatarFallback>
-                  <User className="w-4 h-4" />
+                  <User className="w-3 h-3 sm:w-4 sm:h-4" />
                 </AvatarFallback>
               </Avatar>
             )}
@@ -263,16 +264,16 @@ export default function Chat() {
         
         {/* Typing Indicator */}
         {isTyping && (
-          <div className="flex items-start space-x-3">
-            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
-              <Bot className="w-4 h-4 text-primary-foreground" />
+          <div className="flex items-start space-x-2 sm:space-x-3">
+            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+              <Bot className="w-3 h-3 sm:w-4 sm:h-4 text-primary-foreground" />
             </div>
             <div className="flex-1">
               <div className="flex items-center space-x-2 mb-1">
                 <span className="text-sm font-medium text-foreground">AI Assistant</span>
                 <span className="text-xs text-muted-foreground">typing...</span>
               </div>
-              <div className="bg-card border border-border rounded-lg p-4 max-w-3xl">
+              <div className="bg-card border border-border rounded-lg p-3 sm:p-4 max-w-[280px] sm:max-w-md lg:max-w-3xl">
                 <div className="flex space-x-1">
                   <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse"></div>
                   <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
@@ -287,8 +288,8 @@ export default function Chat() {
       </div>
 
       {/* Message Input */}
-      <div className="border-t border-border bg-card p-6">
-        <div className="flex space-x-4">
+      <div className="border-t border-border bg-card p-3 sm:p-6">
+        <div className="flex space-x-2 sm:space-x-4">
           <div className="flex-1 relative">
             <Textarea
               ref={textareaRef}
@@ -296,7 +297,7 @@ export default function Chat() {
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Type your message here..."
-              className="min-h-[3rem] max-h-32 resize-none pr-12"
+              className="min-h-[2.5rem] sm:min-h-[3rem] max-h-24 sm:max-h-32 resize-none pr-10 sm:pr-12 text-sm sm:text-base"
               disabled={sendMessageMutation.isPending}
               data-testid="input-message"
             />
@@ -304,14 +305,14 @@ export default function Chat() {
               size="sm"
               onClick={handleSendMessage}
               disabled={!inputValue.trim() || sendMessageMutation.isPending}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 p-0"
+              className="absolute right-1 sm:right-2 top-1/2 transform -translate-y-1/2 w-7 h-7 sm:w-8 sm:h-8 p-0"
               data-testid="button-send"
             >
-              <Send className="w-4 h-4" />
+              <Send className="w-3 h-3 sm:w-4 sm:h-4" />
             </Button>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground mt-2 text-center">
+        <p className="text-xs text-muted-foreground mt-2 text-center hidden sm:block">
           Press Enter to send, Shift+Enter for new line
         </p>
       </div>
