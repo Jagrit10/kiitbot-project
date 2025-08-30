@@ -14,16 +14,31 @@ function Router() {
 
   return (
     <Switch>
-      {isLoading || !isAuthenticated ? (
+      {isLoading ? (
+        <Route>
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading...</p>
+            </div>
+          </div>
+        </Route>
+      ) : !isAuthenticated ? (
         <>
           <Route path="/" component={Landing} />
           <Route path="/auth" component={Auth} />
+          <Route>
+            <Landing />
+          </Route>
         </>
       ) : (
         <>
           <Route path="/" component={Chat} />
           <Route path="/chat" component={Chat} />
           <Route path="/dashboard" component={Chat} />
+          <Route path="/auth">
+            <Chat />
+          </Route>
         </>
       )}
       <Route component={NotFound} />
