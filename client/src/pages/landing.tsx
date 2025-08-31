@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Bot, MessageCircle, Sparkles, Zap, Shield, Clock, Users, ArrowRight, CheckCircle } from "lucide-react";
+import kiitLogo from '../images/kiit.png';
 
 export default function Landing() {
   const handleLogin = () => {
@@ -14,12 +15,12 @@ export default function Landing() {
       <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur">
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2 sm:space-x-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary rounded-xl flex items-center justify-center">
-              <Bot className="w-4 h-4 sm:w-6 sm:h-6 text-primary-foreground" />
+            <div>
+              <img src={kiitLogo} className="w-18 h-12 bg-transparent sm:w-18 sm:h-12 rounded-xl"></img>
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-lg sm:text-xl font-semibold text-foreground">AI Assistant</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground">Intelligent conversations await</p>
+              <h1 className="text-lg sm:text-xl font-semibold text-foreground">KIIT MITRA</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground">Your KIIT Knowledge Buddy</p>
             </div>
           </div>
           <Button onClick={handleLogin} size="sm" data-testid="button-login">
@@ -32,8 +33,8 @@ export default function Landing() {
       {/* Hero Section */}
       <section className="container mx-auto px-4 sm:px-6 py-8 sm:py-16 text-center">
         <div className="max-w-4xl mx-auto">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-6 sm:mb-8">
-            <Bot className="w-8 h-8 sm:w-10 sm:h-10 text-primary-foreground" />
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 sm:mb-8">
+            <img src={kiitLogo} className="h-full w-full rounded-2xl" ></img>
           </div>
           
           <div className="mb-4">

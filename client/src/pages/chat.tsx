@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Markdown } from "@/components/ui/markdown";
 import { Bot, Plus, Send, User, LogOut } from "lucide-react";
+import * as chat from '@botpress/chat'
+import kiitLogo from '../images/kiit.png';
 
 interface Message {
   id: string;
@@ -18,17 +18,24 @@ interface Message {
   timestamp: string;
 }
 
+// const WEBHOOK_ID = '87359b9f-23d2-4961-aa37-16967b80ac34';
+const WEBHOOK_ID = process.env.WEBHOOK_ID || '87359b9f-23d2-4961-aa37-16967b80ac34';
+
+let client: any = null;
+let conversation: any = null;
+
 export default function Chat() {
   const { user, isLoading } = useAuth();
   const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "👋 Hello! I'm your AI assistant. I'm here to help you with questions, provide information, and have engaging conversations. What would you like to talk about today?",
+      content: "👋 Hello! I'm KIIT MITRA. I'm here to help you with questions, provide information, and have engaging conversations. What would you like to talk about today?",
       sender: 'bot',
       timestamp: new Date().toISOString()
     }
   ]);
+  const [isPending, setIsPending] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -38,9 +45,19 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const initializeBot = async () => {
+    client = await chat.Client.connect({ webhookId: WEBHOOK_ID });
+    const result = await client.createConversation({});
+    conversation = result.conversation;
+  };
+
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping]);
+
+  useEffect(() => {
+    initializeBot();
+  }, []);
 
   // Redirect to auth if not authenticated
   useEffect(() => {
@@ -57,22 +74,47 @@ export default function Chat() {
     }
   }, [user, isLoading, toast]);
 
-  const sendMessageMutation = useMutation({
-    mutationFn: async (message: string) => {
-      const response = await apiRequest('POST', '/api/chat/message', { message });
-      return response.json();
-    },
-    onSuccess: (data) => {
-      const botMessage: Message = {
-        id: Date.now().toString() + '-bot',
-        content: data.response,
-        sender: 'bot',
-        timestamp: data.timestamp || new Date().toISOString()
-      };
-      setMessages(prev => [...prev, botMessage]);
-      setIsTyping(false);
-    },
-    onError: (error) => {
+  const sendMessageMutation = async (msg: string) => {
+    setIsPending(true);
+
+    try {
+
+      await client.createMessage({ conversationId: conversation.id, payload: { type: 'text', text: msg } })
+      const listener = await client.listenConversation({ id: conversation.id })
+
+      interface BotpressReply {
+        payload: { text: string }
+      }
+
+      const reply = await new Promise<BotpressReply | null>((res) => {
+        const onMsg = (ev: any) => {
+          if (ev.userId === client.user.id) return
+          listener.off('message_created', onMsg)
+          res(ev as BotpressReply)
+        }
+        listener.on('message_created', onMsg)
+        setTimeout(() => { listener.off('message_created', onMsg); res(null) }, 30000)
+      })
+
+      if (reply) {
+
+        const botMessage: Message = {
+          id: Date.now().toString() + '-bot',
+          content: reply.payload.text,
+          sender: 'bot',
+          timestamp: new Date().toISOString()
+        };
+
+
+        setMessages(prev => [...prev, botMessage]);
+        setIsTyping(false);
+      } else {
+        throw new Error('No reply received from bot');
+      }
+
+      if (listener.disconnect) await listener.disconnect()
+
+    } catch (error) {
       setIsTyping(false);
       if (isUnauthorizedError(error as Error)) {
         toast({
@@ -83,19 +125,15 @@ export default function Chat() {
         setTimeout(() => {
           window.location.href = "/auth";
         }, 500);
-        return;
-      }
-      toast({
-        title: "Error",
-        description: "Failed to send message. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
+      };
+    }
+
+    setIsPending(false);
+  }
 
   const handleSendMessage = () => {
     const message = inputValue.trim();
-    if (!message || sendMessageMutation.isPending) return;
+    if (!message || isPending) return;
 
     // Add user message
     const userMessage: Message = {
@@ -109,7 +147,7 @@ export default function Chat() {
     setIsTyping(true);
 
     // Send to AI
-    sendMessageMutation.mutate(message);
+    sendMessageMutation(message);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -120,10 +158,11 @@ export default function Chat() {
   };
 
   const handleNewChat = () => {
+    
     setMessages([
       {
         id: '1',
-        content: "👋 Hello! I'm your AI assistant. I'm here to help you with questions, provide information, and have engaging conversations. What would you like to talk about today?",
+        content: "👋 Hello! I'm KIIT MITRA. I'm here to help you with questions, provide information, and have engaging conversations. What would you like to talk about today?",
         sender: 'bot',
         timestamp: new Date().toISOString()
       }
@@ -133,15 +172,15 @@ export default function Chat() {
   };
 
   const { logoutMutation } = useAuth();
-  
+
   const handleLogout = () => {
     logoutMutation.mutate();
   };
 
   const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    return new Date(timestamp).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 
@@ -161,17 +200,17 @@ export default function Chat() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur border-b border-border px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary rounded-lg flex items-center justify-center">
-            <Bot className="w-4 h-4 sm:w-6 sm:h-6 text-primary-foreground" />
-          </div>
+          <div>
+              <img src={kiitLogo} className="w-18 h-12 bg-transparent sm:w-18 sm:h-12 rounded-xl"></img>
+            </div>
           <div className="hidden sm:block">
-            <h1 className="text-lg sm:text-xl font-semibold text-foreground">AI Assistant</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground">Always here to help</p>
-          </div>
+              <h1 className="text-lg sm:text-xl font-semibold text-foreground">KIIT MITRA</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground">Your KIIT Knowledge Buddy</p>
+            </div>
         </div>
-        
+
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <Button 
+          <Button
             onClick={handleNewChat}
             size="sm"
             className="flex items-center space-x-1 sm:space-x-2"
@@ -180,7 +219,7 @@ export default function Chat() {
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">New Chat</span>
           </Button>
-          
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="relative" data-testid="button-user-menu">
@@ -195,8 +234,8 @@ export default function Chat() {
             <DropdownMenuContent align="end" className="w-48">
               <div className="px-2 py-1.5">
                 <p className="text-sm font-medium text-foreground">
-                  {user?.firstName && user?.lastName 
-                    ? `${user.firstName} ${user.lastName}` 
+                  {user?.firstName && user?.lastName
+                    ? `${user.firstName} ${user.lastName}`
                     : user?.username || 'User'}
                 </p>
                 {user?.email && (
@@ -218,31 +257,29 @@ export default function Chat() {
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex items-start space-x-2 sm:space-x-3 message-animation ${
-              message.sender === 'user' ? 'justify-end' : ''
-            }`}
+            className={`flex items-start space-x-2 sm:space-x-3 message-animation ${message.sender === 'user' ? 'justify-end' : ''
+              }`}
           >
             {message.sender === 'bot' && (
               <div className="w-6 h-6 sm:w-8 sm:h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
                 <Bot className="w-3 h-3 sm:w-4 sm:h-4 text-primary-foreground" />
               </div>
             )}
-            
+
             <div className={`flex-1 ${message.sender === 'user' ? 'flex flex-col items-end' : ''}`}>
               <div className={`flex items-center space-x-2 mb-1 ${message.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
                 <span className="text-sm font-medium text-foreground">
-                  {message.sender === 'user' ? 'You' : 'AI Assistant'}
+                  {message.sender === 'user' ? 'You' : 'KIIT Assistant'}
                 </span>
                 <span className="text-xs text-muted-foreground">
                   {formatTime(message.timestamp)}
                 </span>
               </div>
-              
-              <div className={`max-w-[280px] sm:max-w-md lg:max-w-3xl rounded-lg p-3 sm:p-4 ${
-                message.sender === 'user' 
-                  ? 'bg-primary text-primary-foreground' 
-                  : 'bg-card border border-border'
-              }`}>
+
+              <div className={`max-w-[280px] sm:max-w-md lg:max-w-3xl rounded-lg p-3 sm:p-4 ${message.sender === 'user'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-card border border-border'
+                }`}>
                 {message.sender === 'user' ? (
                   <p>{message.content}</p>
                 ) : (
@@ -250,7 +287,7 @@ export default function Chat() {
                 )}
               </div>
             </div>
-            
+
             {message.sender === 'user' && (
               <Avatar className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0">
                 <AvatarImage src={user?.profileImageUrl || undefined} />
@@ -261,7 +298,7 @@ export default function Chat() {
             )}
           </div>
         ))}
-        
+
         {/* Typing Indicator */}
         {isTyping && (
           <div className="flex items-start space-x-2 sm:space-x-3">
@@ -270,20 +307,20 @@ export default function Chat() {
             </div>
             <div className="flex-1">
               <div className="flex items-center space-x-2 mb-1">
-                <span className="text-sm font-medium text-foreground">AI Assistant</span>
+                <span className="text-sm font-medium text-foreground">KIIT Assistant</span>
                 <span className="text-xs text-muted-foreground">typing...</span>
               </div>
               <div className="bg-card border border-border rounded-lg p-3 sm:p-4 max-w-[280px] sm:max-w-md lg:max-w-3xl">
                 <div className="flex space-x-1">
                   <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse"></div>
-                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
                 </div>
               </div>
             </div>
           </div>
         )}
-        
+
         <div ref={messagesEndRef} />
       </div>
 
@@ -298,13 +335,13 @@ export default function Chat() {
               onKeyDown={handleKeyDown}
               placeholder="Type your message here..."
               className="min-h-[2.5rem] sm:min-h-[3rem] max-h-24 sm:max-h-32 resize-none pr-10 sm:pr-12 text-sm sm:text-base"
-              disabled={sendMessageMutation.isPending}
+              disabled={isPending}
               data-testid="input-message"
             />
             <Button
               size="sm"
               onClick={handleSendMessage}
-              disabled={!inputValue.trim() || sendMessageMutation.isPending}
+              disabled={!inputValue.trim() || isPending}
               className="absolute right-1 sm:right-2 top-1/2 transform -translate-y-1/2 w-7 h-7 sm:w-8 sm:h-8 p-0"
               data-testid="button-send"
             >
